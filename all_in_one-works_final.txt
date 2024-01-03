@@ -1,0 +1,151 @@
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
+from sklearn.model_selection import train_test_split
+import joblib
+
+## Assuming you have a CSV file named 'TAMIL_TRAINING_DATA.csv'
+csv_file_path = r"C:\Users\girma\Desktop\NLP\share_task\tamil_n.csv"
+
+# Read the CSV file into a DataFrame
+sample = pd.read_csv(csv_file_path, encoding="latin-1")
+df = sample.dropna(axis=1, how='all')
+raw = df.where(pd.notnull(df), '')
+
+# Labeling
+raw.loc[raw['LABELS'] == 'stressed', 'LABELS'] = 0  # stressed=0 and non stressed=1
+raw.loc[raw['LABELS'] == 'Non stressed', 'LABELS'] = 1
+
+# Convert the 'LABELS' column to integers with handling empty strings
+raw['LABELS'] = pd.to_numeric(raw['LABELS'], errors='coerce')
+raw['LABELS'].fillna(0, inplace=True)  # Fill missing values with 0 (or any other suitable value)
+
+# Assuming you have 'LABELS' and 'Text data' columns in your training data
+X_train = raw['TEXT']
+y_train = raw['LABELS']
+
+# Feature extraction (TF-IDF) for training data
+feature_extra = TfidfVectorizer(min_df=1, stop_words='english', lowercase=True)
+X_train_feature = feature_extra.fit_transform(X_train)
+
+# Train a logistic regression model
+classifier = LogisticRegression()
+classifier.fit(X_train_feature, y_train)
+
+# Save the trained model and feature extractor
+joblib.dump(classifier, 'logistic_regression_modeltamil.joblib')
+joblib.dump(feature_extra, 'tfidf_vectorizertamil.joblib')
+
+# Load the external test data into a DataFrame
+external_test_path = r"C:\Users\girma\Desktop\NLP\share_task\full_tamil_data_test.tsv"
+external_test_data = pd.read_table(external_test_path, encoding="latin-1")
+external_test_raw = external_test_data.dropna(axis=1, how='all')
+external_test_raw = external_test_raw.where(pd.notnull(external_test_raw), '')
+
+# Separate the features and labels for external test data
+X_external_test = external_test_raw['Text data']
+pid=external_test_raw['PID']
+
+# Load the saved feature extractor and transform the external test data
+loaded_feature_extra = joblib.load('tfidf_vectorizertamil.joblib')
+X_external_test_feature = loaded_feature_extra.transform(X_external_test)
+
+# Convert to dense array for your custom Logistic Regression
+X_external_test_feature = X_external_test_feature.toarray()
+
+# Load the trained logistic regression model
+loaded_classifier = joblib.load('logistic_regression_modeltamil.joblib')
+
+# Make predictions on the external test data using the loaded model
+y_pred_external_test = loaded_classifier.predict(X_external_test_feature)
+#send the output to the file
+#send to file
+# Convert predictions to DataFrame and modify 'LABELS' column
+y_pred_ontest_df = pd.DataFrame({'class_label': y_pred_external_test})
+y_pred_ontest_df.loc[y_pred_ontest_df['class_label'] == 0, 'class_label'] = 'stressed'
+y_pred_ontest_df.loc[y_pred_ontest_df['class_label'] == 1, 'class_label'] = 'Non stressed'
+
+# Write the predictions to a CSV file
+output_csv_path = r"C:\Users\girma\Desktop\NLP\share_task\tamil_test_actual1.csv"
+#output_csv_path1= r"C:\Users\girma\Desktop\NLP\share_task\final_1.csv"
+y_pred_ontest_df.to_csv(output_csv_path, header=True, index=False)
+#Yp_df.to_csv(output_csv_path1,header=True, index=False)
+
+
+print("girma")
+
+# ... (rest of your code for saving predictions to CSV, calculating metrics, etc.)
+
+
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import joblib
+
+# Assuming you have a CSV file named 'TAMIL_TRAINING_DATA.csv'
+csv_file_path = r"C:\Users\girma\Desktop\NLP\share_task\tamil_n.csv"
+
+# Read the CSV file into a DataFrame
+sample = pd.read_csv(csv_file_path, encoding="latin-1")
+df = sample.dropna(axis=1, how='all')
+raw = df.where(pd.notnull(df), '')
+
+# Labeling
+raw.loc[raw['LABELS'] == 'stressed', 'LABELS'] = 0  # stressed=0 and non stressed=1
+raw.loc[raw['LABELS'] == 'Non stressed', 'LABELS'] = 1
+
+# Convert the 'LABELS' column to integers with handling empty strings
+raw['LABELS'] = pd.to_numeric(raw['LABELS'], errors='coerce')
+raw['LABELS'].fillna(0, inplace=True)  # Fill missing values with 0 (or any other suitable value)
+
+# Assuming you have 'LABELS' and 'Text data' columns in your training data
+X_train = raw['TEXT']
+y_train = raw['LABELS']
+
+# Feature extraction (TF-IDF) for training data
+feature_extra = TfidfVectorizer(min_df=1, stop_words='english', lowercase=True)
+X_train_feature = feature_extra.fit_transform(X_train)
+
+# Train a logistic regression model
+classifier = LogisticRegression()
+classifier.fit(X_train_feature, y_train)
+
+# Save the trained model and feature extractor
+joblib.dump(classifier, 'logistic_regression_modeltamil.joblib')
+joblib.dump(feature_extra, 'tfidf_vectorizertamil.joblib')
+
+# Load the external test data into a DataFrame
+external_test_path = r"C:\Users\girma\Desktop\NLP\share_task\full_tamil_data_test.tsv"
+external_test_data = pd.read_table(external_test_path, encoding="latin-1")
+external_test_raw = external_test_data.dropna(axis=1, how='all')
+external_test_raw = external_test_raw.where(pd.notnull(external_test_raw), '')
+
+# Separate the features and labels for external test data
+X_external_test = external_test_raw['Text data']
+pid = external_test_raw['PID']
+
+# Load the saved feature extractor and transform the external test data
+loaded_feature_extra = joblib.load('tfidf_vectorizertamil.joblib')
+X_external_test_feature = loaded_feature_extra.transform(X_external_test)
+
+# Convert to dense array for your custom Logistic Regression
+X_external_test_feature = X_external_test_feature.toarray()
+
+# Load the trained logistic regression model
+loaded_classifier = joblib.load('logistic_regression_modeltamil.joblib')
+
+# Make predictions on the external test data using the loaded model
+y_pred_external_test = loaded_classifier.predict(X_external_test_feature)
+# Convert predictions to DataFrame and modify 'LABELS' column
+y_pred_ontest_df = pd.DataFrame({'PID': pid, 'TAB': '\t', 'class_label': y_pred_external_test})
+
+# Map numeric labels to string values
+y_pred_ontest_df['class_label'] = y_pred_ontest_df['class_label'].map({0: 'stressed', 1: 'Non stressed'})
+
+# Write the predictions to a TSV file
+output_tsv_path = r"C:\Users\girma\Desktop\NLP\share_task\tamil_test_actual11.tsv"
+y_pred_ontest_df.to_csv(output_tsv_path, header=True, index=False, sep='\t')
+print("girma")
+
