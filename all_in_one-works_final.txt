@@ -149,3 +149,140 @@ output_tsv_path = r"C:\Users\girma\Desktop\NLP\share_task\tamil_test_actual11.ts
 y_pred_ontest_df.to_csv(output_tsv_path, header=True, index=False, sep='\t')
 print("girma")
 
+##########Simmilarity code
+before preprcessing
+wolaita 147309
+dawuro 165175
+gamo 139508
+gofa 145129
+
+after preprocessing(most of removing the numbers and other spacial characters)
+wolaita 144085
+###########################################################################################
+dawuro 157976
+###########################################################################################
+gamo 132275
+###########################################################################################
+gofa 134550
+
+
+# Importing necessary libraries
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+import numpy as np
+import re
+from bs4 import BeautifulSoup
+
+# Function to preprocess a document
+def preprocess_document(text):
+    soup = BeautifulSoup(text, "html.parser")
+    [s.extract() for s in soup(['iframe', 'script'])]
+    stripped_text = soup.get_text()
+    stripped_text = re.sub(r'[\r|\n|\r\n|\s|“|”|:|(|)|-|0-9]+', '\n', stripped_text)
+    return stripped_text.lower()  # Convert to lowercase
+
+# Define three sample documents
+path1 = r"E:\girma ongoing research\Omotic_data\MAATIYOOSA_wolaita.txt"
+path2 = r"E:\girma ongoing research\Omotic_data\Maatoossa_dawuro.txt"
+path3 = r"E:\girma ongoing research\Omotic_data\Matoosa_gamo.txt"
+path4 = r"E:\girma ongoing research\Omotic_data\matoossa_gofa.txt"
+
+# Read and preprocess documents
+doc1 = preprocess_document(open(path1, encoding='latin-1').read())
+doc2 = preprocess_document(open(path2, encoding='latin-1').read())
+doc3 = preprocess_document(open(path3, encoding='latin-1').read())
+doc4 = preprocess_document(open(path4, encoding='latin-1').read())
+
+# Create a list of documents
+documents = [doc1, doc2, doc3, doc4]
+
+# Initialize the CountVectorizer
+vectorizer = TfidfVectorizer()
+
+# Transform the documents into a BoW matrix
+tfidf_matrix = vectorizer.fit_transform(documents)
+
+# Get the vocabulary (words) and their corresponding indices
+vocabulary = vectorizer.get_feature_names_out()
+
+# Calculate cosine similarity between documents
+similarities = cosine_similarity(tfidf_matrix)
+
+# Print the tf-idf matrix
+print("tfidf-of-Words Matrix:")
+print(tfidf_matrix.toarray())
+print("\nVocabulary (Words):")
+print(vocabulary)
+print("====================================")
+
+# Print the similarity matrix
+print("Cosine Similarity Matrix:")
+print(similarities)
+
+
+print("\n====================================\ncomparing their distances")
+# Define the tf-idf representations of the documents
+bow_doc1 = tfidf_matrix[0].toarray().flatten()
+bow_doc2 = tfidf_matrix[1].toarray().flatten()
+bow_doc3 = tfidf_matrix[2].toarray().flatten()
+bow_doc4 = tfidf_matrix[3].toarray().flatten()
+
+
+# Calculate Euclidean distances
+distance_doc1_doc2 = np.linalg.norm(bow_doc1 - bow_doc2)
+distance_doc1_doc3 = np.linalg.norm(bow_doc1 - bow_doc3)
+distance_doc1_doc4 = np.linalg.norm(bow_doc1 - bow_doc4)
+distance_doc2_doc3 = np.linalg.norm(bow_doc2 - bow_doc3)
+distance_doc2_doc4 = np.linalg.norm(bow_doc2 - bow_doc4)
+distance_doc3_doc4 = np.linalg.norm(bow_doc3 - bow_doc4)
+# Print the distances
+print(f"The Distance between wolaita and dawuro: {distance_doc1_doc2:.2f}")
+print(f"The Distance between wolaita and gamo: {distance_doc1_doc3:.2f}")
+print(f"The Distance between wolaita and gofa: {distance_doc1_doc4:.2f}")
+print(f"Then Distance between dawuro and gamo: {distance_doc2_doc3:.2f}")
+print(f"Then Distance between gawuro and gofa: {distance_doc2_doc3:.2f}")
+print(f"Then Distance between gamo and gofa: {distance_doc3_doc4:.2f}")
+
+
+print("\n====================================\ndepict in xy coordinate")
+tfidf_vectors = tfidf_matrix.toarray()
+# Apply PCA to reduce dimensionality to 2 for visualization
+pca = PCA(n_components=2)
+pca_vectors = pca.fit_transform(tfidf_vectors)
+
+# Plot the documents in 2D space
+plt.scatter(pca_vectors[:, 0], pca_vectors[:, 1])
+plt.title('Document Visualization in 2D Space')
+plt.xlabel('X axis')
+plt.ylabel('Y axis')
+
+# Annotate points with document labels
+for i, txt in enumerate([doc1, doc2, doc3,doc4]):
+    plt.annotate(txt, (pca_vectors[i, 0], pca_vectors[i, 1]))
+plt.show()
+tfidf-of-Words Matrix:
+[[0.05471008 0.         0.         ... 0.         0.         0.00110783]
+ [0.06364182 0.00138482 0.00830893 ... 0.         0.00138482 0.        ]
+ [0.         0.         0.         ... 0.00147405 0.         0.        ]
+ [0.03739627 0.         0.         ... 0.         0.         0.00112663]]
+
+Vocabulary (Words):
+['aa' 'aabaan' 'aabba' ... 'zuppetokkokko' 'zuuzummeeddino'
+ 'zuuzummidosona']
+====================================
+Cosine Similarity Matrix:
+[[1.         0.3128088  0.14648536 0.33377921]
+ [0.3128088  1.         0.12070286 0.32069047]
+ [0.14648536 0.12070286 1.         0.22125554]
+ [0.33377921 0.32069047 0.22125554 1.        ]]
+
+====================================
+comparing their distances
+The Distance between wolaita and dawuro: 1.17
+The Distance between wolaita and gamo: 1.31
+The Distance between wolaita and gofa: 1.15
+Then Distance between dawuro and gamo: 1.33
+Then Distance between gawuro and gofa: 1.33
+Then Distance between gamo and gofa: 1.25
